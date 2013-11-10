@@ -12,6 +12,7 @@ How to use it
 
 useage:
 use notepad add a line in your hosts(C:\Windows\System32\drivers\etc):
+
 174.140.165.4 www.lrc123.com  #foobar lrc
 
 =============
