@@ -26,7 +26,6 @@ How to build server
 
 3.you can edit listen_port = 80 or use Reverse Proxy like this
 
-you can use Reverse Proxy drun
 server {
 	listen       80;
 	location / {
