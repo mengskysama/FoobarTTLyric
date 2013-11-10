@@ -9,20 +9,20 @@ import tornado.httpclient
 from urllib import quote
 from urllib import unquote
 from tornado import gen
-from xml.etree import ElementTree
 
 import ttlrcdump
 
 listen_port = 38439
 
 def ChooiseItem(xml, artist):
-
+    #print '==============================================='
     #print xml.decode('utf-8').encode('gbk')
 
     n = xml.find('<?xml')
     if n == -1:
         return False
 
+    '''
     artist = ttlrcdump.FilterSearchStr(artist)
     #remove item if artist != artist
     n = 0
@@ -41,7 +41,9 @@ def ChooiseItem(xml, artist):
             pos = begin
             n -= 1
             t -= 1
-
+    '''
+    #print xml.decode('utf-8').encode('gbk')
+    #print '==============================================='
     n = xml.find('id=')
     if n == -1:
         return False
@@ -73,12 +75,12 @@ def ChooiseItem(xml, artist):
         begin = xml.find('artist="', n) + 8
         end = xml.find('"', begin )
         #print quote(xml[begin:end])
-        artist = xml[begin:end].replace('&amp;','&')
+        artist = xml[begin:end].replace('&amp;','&').replace('&apos;',"'").replace('&quot;','"').replace('&lt;','<').replace('&gt;','>')
 
         begin = xml.find('title="', n) + 7
         end = xml.find('"', begin)
         #print quote(xml[begin + 7:end])
-        title = xml[begin:end].replace('&amp;','&')
+        title = xml[begin:end].replace('&amp;','&').replace('&apos;',"'").replace('&quot;','"').replace('&lt;','<').replace('&gt;','>')
 
         #ret = "id=%s&artist=%s&title=%s" % (id, quote(artist), quote(title))
         #print ret
@@ -104,8 +106,9 @@ def handle_request(request):
         id = get_arg(request.uri, 'id')
         artist = unquote(get_arg(request.uri, 'artist'))
         title = unquote(get_arg(request.uri, 'title'))
-        #print artist.decode('utf-8').encode('gbk')
-        #print title.decode('utf-8').encode('gbk')
+        print id.decode('utf-8').encode('gbk')
+        print artist.decode('utf-8').encode('gbk')
+        print title.decode('utf-8').encode('gbk')
         try:
             http_client = tornado.httpclient.AsyncHTTPClient()
             #print ttlrcdump.GetDownloadLrcReq(id, artist, title)
@@ -143,20 +146,20 @@ def handle_request(request):
         keyword = keyword.decode('gbk').encode('utf-8')
         #print keyword.decode('utf-8').encode('gbk')
         #print repr(keyword)
-
+        keyword = keyword.replace('  ',' ')
         try:
             if keyword.count(' ') == 0:
                 keyword += ' '
 
-            n = len(keyword)
+            n = 0
             for i in range(0, keyword.count(' ')):
                 #try to prase art and title
-                n = keyword.rfind(' ', 0, n) - 1
-                artist = keyword[0:n+1]
-                title = keyword[n+1:]
+                n = keyword.find(' ', n) + 1
+                artist = keyword[0:n-1]
+                title = keyword[n:]
 
-                foo_artist = artist
-                foo_title = title
+                #print 'guess art=%s' % artist.decode('utf-8').encode('gbk')
+                #print 'guess tit=%s' % title.decode('utf-8').encode('gbk')
 
                 http_client = tornado.httpclient.AsyncHTTPClient()
                 #print ttlrcdump.GetSearchLrcReq(artist, title)
@@ -174,14 +177,14 @@ def handle_request(request):
                           '查看:<a class="mr"href="%s" target="_blank">LRC' \
                           '<div style="clear:both;"></div>' \
                           '<div class="page wid f14">'
-                context = context.replace('%s', foo_artist, 1)
-                uni_title = foo_title.decode('utf-8')
+                context = context.replace('%s', artist, 1)
+                uni_title = title.decode('utf-8')
                 strrep = ''
                 for i in range(0, len(uni_title)):
                     strrep += '<span class="highlighter">%s</span>' % uni_title[i:i+1].encode('utf-8')
                 context = context.replace('%s', strrep, 1)
                 context = context.replace('%s', "/lrc/?id=%s&artist=%s&title=%s" % (str(ret['id']), quote(str(ret['artist'])), quote(str(ret['title']))))
-                #print context
+                print context
             else:
                 context = 'Lrc Not Found'
             request.write('HTTP/1.1 200 OK\r\nContent-Length: %d\r\n\r\n%s' % (len(context), context))
