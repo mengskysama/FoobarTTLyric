@@ -4,7 +4,9 @@ FoobarTTLyric
 Foobar Lyrics Show Pannel 3 下载千千静听(百度播放器)歌词库
 
 Foobar TT Lrc Down (foottlrc) replace source www.lrc123.com to download lyric by Foobar tool Lyrics Show Pannel 3.
+
 foottlrc result number is more than Timestamped3.
+
 Notice: foottlrc always return contain Chinese Lyric (if has).Sure you can change it and run in yourself server.
 
 =============
