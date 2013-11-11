@@ -5,8 +5,12 @@ import httplib2
 import platform
 import hashlib
 import re
+import time
+import datetime
+import random
 
 h = httplib2.Http(timeout=15)
+servers = ['ttlrc.qianqian.com', 'ttlrcct2.qianqian.com', 'ttlrccnc.qianqian.com']
 
 def GetCiValue():
     return hashlib.md5(str(platform.uname())).hexdigest().upper()
@@ -55,28 +59,6 @@ def FilterSearchStr(_str):
 
     return _str
 
-def GetSearchLrcReq(artist, title):
-    #print artist.decode('utf-8').encode('gbk')
-    #print title.decode('utf-8').encode('gbk')
-    artist = FilterSearchStr(artist)
-    title = FilterSearchStr(title)
-    #print 'filter end %s' % artist.decode('utf-8').encode('gbk')
-    #print 'filter end %s' % title.decode('utf-8').encode('gbk')
-    return 'http://ttlrc.qianqian.com/dll/lyricsvr.dll?sh?Artist=%s&Title=%s&Flags=2&ci=%s' % (EncodeString2Hex(artist), EncodeString2Hex(title), GetCiValue())
-
-def SearchLrc(artist, title):
-    try:
-        get_url = GetSearchLrcReq(artist, title)
-        #print get_url
-        head, ret = h.request(get_url)
-    except IOError, e:
-        print 'Search Requset Faild'
-        if hasattr(e, 'code') and hasattr(e, 'reason'):
-            print 'error code:%d - reason:%s.' % (e.code, e.reason)
-        elif hasattr(e, 'code'):
-            print "error code:%d" % e.code
-        return ''
-    return ret
 
 def CodeEncrypt(id, artist, title):
     data = artist + title
@@ -126,12 +108,39 @@ def CodeEncrypt(id, artist, title):
 
     return tmp1
 
-def GetDownloadLrcReq(id, artist, title):
-    return 'http://ttlrc.qianqian.com/dll/lyricsvr.dll?dl?Id=%s&Code=%s&ci=%s' % (id, CodeEncrypt(id, artist, title), GetCiValue())
+def GetServerNum():
+    #random selcet a server for serach
+    return random.randint(0, len(servers)-1)
 
-def DownloadLrc(id, artist, title):
+def GetSearchLrcReq(servernum, artist, title):
+    #print artist.decode('utf-8').encode('gbk')
+    #print title.decode('utf-8').encode('gbk')
+    artist = FilterSearchStr(artist)
+    title = FilterSearchStr(title)
+    #print 'filter end %s' % artist.decode('utf-8').encode('gbk')
+    #print 'filter end %s' % title.decode('utf-8').encode('gbk')
+    return 'http://%s/dll/lyricsvr.dll?sh?Artist=%s&Title=%s&Flags=2&ci=%s' % (servers[servernum], EncodeString2Hex(artist), EncodeString2Hex(title), GetCiValue())
+
+def SearchLrc(servernum, artist, title):
     try:
-        get_url =  GetDownloadLrcReq(id, artist, title)
+        get_url = GetSearchLrcReq(servernum, artist, title)
+        #print get_url
+        head, ret = h.request(get_url)
+    except IOError, e:
+        print 'Search Requset Faild'
+        if hasattr(e, 'code') and hasattr(e, 'reason'):
+            print 'error code:%d - reason:%s.' % (e.code, e.reason)
+        elif hasattr(e, 'code'):
+            print "error code:%d" % e.code
+        return ''
+    return ret
+
+def GetDownloadLrcReq(servernum, id, artist, title):
+    return 'http://%s/dll/lyricsvr.dll?dl?Id=%s&Code=%s&ci=%s' % (servers[servernum], id, CodeEncrypt(id, artist, title), GetCiValue())
+
+def DownloadLrc(servernum, id, artist, title):
+    try:
+        get_url =  GetDownloadLrcReq(servernum, id, artist, title)
         #print get_url
         head, ret = h.request(get_url)
     except IOError, e:
@@ -146,8 +155,19 @@ def DownloadLrc(id, artist, title):
 def main():
     artist = '千反田える (佐藤聡美) & 伊原摩耶花 (茅野愛衣)'
     title = 'まどろみの約束♪'
-    print SearchLrc(artist, title).decode('utf-8').encode('gbk')
-    #szList = DownloadLrc('286735', '千反田える(佐藤聡美)&伊原摩耶花(茅野愛衣)[中日对照]', 'まどろみの約束')
+    artist = 'Suara'
+    #title = '舞い落ちる雪のように'
+    starttime = datetime.datetime.now()
+    for i in range(0,1000):
+        n = GetServerNum()
+        print SearchLrc(n, artist, title).decode('utf-8').encode('gbk')
+        print n
+        time.sleep(0.1)
+    endtime = datetime.datetime.now()
+    print (endtime - starttime).seconds
+
+    #szList = DownloadLrc(0, '185082', '千反田える(佐藤聡美)&伊原摩耶花(茅野愛衣)[中日对照]', 'まどろみの約束')
     #print szList.decode('utf-8').encode('gbk')
+
 if __name__ == '__main__':
     main()

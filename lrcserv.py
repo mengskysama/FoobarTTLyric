@@ -107,16 +107,19 @@ def get_arg(req, arg):
 def handle_request(request):
 
     if request.uri.startswith('/lrc'):
-        id = get_arg(request.uri, 'id')
-        artist = unquote(get_arg(request.uri, 'artist'))
-        title = unquote(get_arg(request.uri, 'title'))
-        #print id.decode('utf-8').encode('gbk')
-        #print artist.decode('utf-8').encode('gbk')
-        #print title.decode('utf-8').encode('gbk')
         try:
+            id = get_arg(request.uri, 'id')
+            artist = unquote(get_arg(request.uri, 'artist'))
+            title = unquote(get_arg(request.uri, 'title'))
+            ttservernum = int(get_arg(request.uri, 'ttservernum'))
+            #print id.decode('utf-8').encode('gbk')
+            #print artist.decode('utf-8').encode('gbk')
+            #print title.decode('utf-8').encode('gbk')
+            print str(ttservernum)
+
             http_client = tornado.httpclient.AsyncHTTPClient()
             #print ttlrcdump.GetDownloadLrcReq(id, artist, title)
-            req = tornado.httpclient.HTTPRequest(ttlrcdump.GetDownloadLrcReq(id, artist, title))
+            req = tornado.httpclient.HTTPRequest(ttlrcdump.GetDownloadLrcReq(ttservernum, id, artist, title))
             res = yield http_client.fetch(req)
             lrc = res.body.replace('>', '】')
             lrc = lrc.replace('<', '【')
@@ -157,6 +160,7 @@ def handle_request(request):
                 keyword += ' '
 
             n = 0
+            ttservernum = 0
             cnt = keyword.count(' ')
             for i in range(0, cnt):
                 #try to prase art and title
@@ -174,6 +178,9 @@ def handle_request(request):
                 #print 'guess tit=%s' % title.decode('utf-8').encode('gbk')
 
                 trycnt = 0
+                if artist.find('and') == -1 and title.find('and') == -1:
+                    trycnt = 1
+
                 while True:
                     reqartist = ''
                     reqtitle = ''
@@ -183,20 +190,15 @@ def handle_request(request):
                     elif trycnt == 1:
                         reqartist = artist
                         reqtitle = title
-                    elif trycnt == 2:
-                        reqartist = artist.replace('and', '')
-                        reqtitle = title
-                    elif trycnt == 3:
-                        reqartist = artist
-                        reqtitle = title.replace('and', '')
                     http_client = tornado.httpclient.AsyncHTTPClient()
-                    #print ttlrcdump.GetSearchLrcReq(artist, title)
-                    req = tornado.httpclient.HTTPRequest(ttlrcdump.GetSearchLrcReq(reqartist, reqtitle))
+                    #print ttlrcdump.GetSearchLrcReq(ttservernum, artist, title)
+                    ttservernum = ttlrcdump.GetServerNum()
+                    req = tornado.httpclient.HTTPRequest(ttlrcdump.GetSearchLrcReq(ttservernum, reqartist, reqtitle))
                     res = yield http_client.fetch(req)
                     ret = ChooiseItem(res.body, artist)
-                    trycnt += 1
-                    if ret != False or trycnt > 3:
+                    if ret != False or trycnt > 0:
                         break
+                    trycnt += 1
 
                 if ret != False:
                     break
@@ -215,7 +217,7 @@ def handle_request(request):
                 for i in range(0, len(uni_title)):
                     strrep += '<span class="highlighter">%s</span>' % uni_title[i].encode('utf-8')
                 context = context.replace('%s', strrep, 1)
-                context = context.replace('%s', "/lrc/?id=%s&artist=%s&title=%s" % (str(ret['id']), quote(str(ret['artist'])), quote(str(ret['title']))))
+                context = context.replace('%s', "/lrc/?id=%s&artist=%s&title=%s&ttservernum=%s" % (str(ret['id']), quote(str(ret['artist'])), quote(str(ret['title'])), str(ttservernum)))
                 #print context.decode('utf-8').encode('gbk')
             else:
                 context = 'Lrc Not Found'
