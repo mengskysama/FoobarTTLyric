@@ -56,10 +56,12 @@ def FilterSearchStr(_str):
     return _str
 
 def GetSearchLrcReq(artist, title):
-    artist = FilterSearchStr(artist)
-    title = FilterSearchStr(title)
     #print artist.decode('utf-8').encode('gbk')
     #print title.decode('utf-8').encode('gbk')
+    artist = FilterSearchStr(artist)
+    title = FilterSearchStr(title)
+    #print 'filter end %s' % artist.decode('utf-8').encode('gbk')
+    #print 'filter end %s' % title.decode('utf-8').encode('gbk')
     return 'http://ttlrc.qianqian.com/dll/lyricsvr.dll?sh?Artist=%s&Title=%s&Flags=2&ci=%s' % (EncodeString2Hex(artist), EncodeString2Hex(title), GetCiValue())
 
 def SearchLrc(artist, title):
