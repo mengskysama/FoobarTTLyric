@@ -12,14 +12,7 @@ Notice: foottlrc always return contain Chinese Lyric (if has).Sure you can chang
 =============
 How to use it
 
-useage:
-useage:
-1.make sure your lyrics show pannel is newest(now support foo_uie_lyrics3-0.4.1
-
-2.use notepad add a line in your hosts(C:\Windows\System32\drivers\etc):
-174.140.165.4 www.lrc123.com
-
-3.setting foorbar lyrics show pannel 3 seach order let lrc123.com at 4th
+1.see hack version foo_uie_lyrics3 http://tt.mengsky.net/
 
 =============
 How to build server
